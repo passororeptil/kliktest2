@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookie Kliker</title>
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #d0e7ff, #f3e6ff);
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    #logo {
+      width: 300px;
+      margin-bottom: 20px;
+    }
+    #cookie {
+      width: 150px;
+      height: 150px;
+      background: url('images/cookie.png') no-repeat center center;
+      background-size: cover;
+      border: none;
+      display: inline-block;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    #cookie:active {
+      transform: scale(0.95);
+    }
+    #points {
+      font-size: 32px;
+      margin: 20px 0;
+      color: #333;
+    }
+    .click-animation {
+      position: absolute;
+      font-size: 24px;
+      color: #7b61ff;
+      animation: rise 0.8s ease-out forwards;
+    }
+    @keyframes rise {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-50px); }
+    }
+    #connectBtn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #7b61ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .social-bar {
+      margin-top: 40px;
+    }
+    .social-bar a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #7b61ff;
+      font-weight: bold;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <img id="logo" src="images/logo.png" alt="Cookie Kliker Logo" />
+  <div id="points">Points: 0</div>
+  <div id="cookie"></div>
+  <br />
+  <button id="connectBtn">Connect Wallet</button>
+  <div class="social-bar">
+    <a href="https://twitter.com" target="_blank">Twitter</a>
+    <a href="https://etherscan.io" target="_blank">Etherscan</a>
+  </div>
+  <script>
+    let points = 0;
+    const pointsDisplay = document.getElementById("points");
+    const cookie = document.getElementById("cookie");
+    cookie.addEventListener("click", function(e) {
+      points++;
+      pointsDisplay.textContent = `Points: ${points}`;
+      const anim = document.createElement("div");
+      anim.textContent = "+1";
+      anim.className = "click-animation";
+      anim.style.left = `${e.clientX - 10}px`;
+      anim.style.top = `${e.clientY - 20}px`;
+      document.body.appendChild(anim);
+      setTimeout(() => document.body.removeChild(anim), 800);
+    });
+    document.getElementById("connectBtn").addEventListener("click", async () => {
+      const provider = new WalletConnectProvider.default({
+        rpc: {
+          1: "https://mainnet.infura.io/v3/YOUR_INFURA_ID"
+        }
+      });
+      await provider.enable();
+      console.log("Wallet connected", provider.accounts[0]);
+      alert("Connected: " + provider.accounts[0]);
+    });
+  </script>
+</body>
+</html>
