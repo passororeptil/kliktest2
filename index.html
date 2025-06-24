@@ -73,7 +73,7 @@
   <br />
   <button id="connectBtn">Connect Wallet</button>
   <div class="social-bar">
-    <a href="https://twitter.com" target="_blank">Twitter</a>
+    <a href="https://x.com/cookieklick" target="_blank">Twitter</a>
     <a href="https://etherscan.io" target="_blank">Etherscan</a>
   </div>
   <script>
@@ -94,7 +94,7 @@
     document.getElementById("connectBtn").addEventListener("click", async () => {
       const provider = new WalletConnectProvider.default({
         rpc: {
-          1: "https://mainnet.infura.io/v3/YOUR_INFURA_ID"
+          1: "https://mainnet.infura.io/v3/b53bf076eed943a88d1d46049df1245e"
         }
       });
       await provider.enable();
