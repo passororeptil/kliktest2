@@ -4,34 +4,39 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cookie Kliker</title>
-  <!-- Tailwind CSS for responsive design -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- WalletConnect Modal -->
-  <script type="module">
-    import { WalletConnectModal } from 'https://cdn.jsdelivr.net/npm/@walletconnect/modal@2.6.2/+esm';
-    window.WalletConnectModal = WalletConnectModal;
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
   <style>
     body {
       background: linear-gradient(to bottom right, #d0e7ff, #f3e6ff);
       font-family: sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
+      text-align: center;
+      padding: 40px;
+    }
+    #logo {
+      width: 300px;
+      margin-bottom: 20px;
     }
     #cookie {
       width: 150px;
       height: 150px;
+      background: url('images/cookie.png') no-repeat center center;
+      background-size: cover;
+      border: none;
+      display: inline-block;
+      cursor: pointer;
       transition: transform 0.1s;
     }
     #cookie:active {
       transform: scale(0.95);
     }
+    #points {
+      font-size: 32px;
+      margin: 20px 0;
+      color: #333;
+    }
     .click-animation {
       position: absolute;
-      font-size: 1.5rem;
+      font-size: 24px;
       color: #7b61ff;
       animation: rise 0.8s ease-out forwards;
     }
@@ -39,38 +44,45 @@
       0% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-50px); }
     }
-    @media (max-width: 640px) {
-      #logo { width: 200px; }
-      #cookie { width: 100px; height: 100px; }
-      #points { font-size: 1.5rem; }
+    #connectBtn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #7b61ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .social-bar {
+      margin-top: 40px;
+    }
+    .social-bar a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #7b61ff;
+      font-weight: bold;
+      font-size: 18px;
     }
   </style>
 </head>
-<body class="text-center">
-  <img id="logo" src="images/logo.png" alt="Cookie Kliker Logo" class="mb-6" />
-  <div id="points" class="text-3xl mb-6 text-gray-800">Points: 0</div>
-  <button id="cookie" aria-label="Click to earn a cookie point" class="bg-transparent border-none cursor-pointer">
-    <img src="images/cookie.png" alt="Cookie" class="w-full h-full" />
-  </button>
-  <button id="connectBtn" class="mt-8 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-lg">
-    Connect Wallet
-  </button>
-  <div class="social-bar mt-10 flex justify-center gap-4">
-    <a href="https://x.com/cookieklick" target="_blank" class="text-purple-600 font-bold text-lg hover:underline">Twitter</a>
-    <a href="https://etherscan.io" target="_blank" class="text-purple-600 font-bold text-lg hover:underline">Etherscan</a>
+<body>
+  <img id="logo" src="images/logo.png" alt="Cookie Kliker Logo" />
+  <div id="points">Points: 0</div>
+  <div id="cookie"></div>
+  <br />
+  <button id="connectBtn">Connect Wallet</button>
+  <div class="social-bar">
+    <a href="https://x.com/cookieklick" target="_blank">Twitter</a>
+    <a href="https://etherscan.io" target="_blank">Etherscan</a>
   </div>
-
-  <script type="module">
-    // Initialize points from localStorage
-    let points = parseInt(localStorage.getItem("points")) || 0;
+  <script>
+    let points = 0;
     const pointsDisplay = document.getElementById("points");
-    pointsDisplay.textContent = `Points: ${points}`;
-
-    // Cookie click handler
     const cookie = document.getElementById("cookie");
-    cookie.addEventListener("click", (e) => {
+
+    cookie.addEventListener("click", function(e) {
       points++;
-      localStorage.setItem("points", points);
       pointsDisplay.textContent = `Points: ${points}`;
       const anim = document.createElement("div");
       anim.textContent = "+1";
@@ -81,23 +93,31 @@
       setTimeout(() => document.body.removeChild(anim), 800);
     });
 
-    // WalletConnect Modal
-    const connectBtn = document.getElementById("connectBtn");
-    const modal = new window.WalletConnectModal({
-      projectId: "002e4f1d7a50dbde0ea2146886850d11", // Get from https://cloud.walletconnect.com
-      chains: ["eip155:1"], // Ethereum mainnet
-    });
-    connectBtn.addEventListener("click", async () => {
+    document.getElementById("connectBtn").addEventListener("click", async () => {
+      if (typeof window.ethereum !== 'undefined') {
+        // Try injected provider first (MetaMask, Rabby, OKX, etc.)
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          alert("Connected: " + accounts[0]);
+          return;
+        } catch (err) {
+          console.warn("Injected provider connection failed, falling back to WalletConnect");
+        }
+      }
+
+      // Fallback to WalletConnect
+      const provider = new WalletConnectProvider.default({
+        rpc: {
+          1: "https://mainnet.infura.io/v3/b53bf076eed943a88d1d46049df1245e" // replace with your Infura ID
+        }
+      });
+
       try {
-        const { uri, approval } = await modal.connect();
-        const session = await approval();
-        console.log("Wallet connected:", session.namespaces);
-        alert("Connected to wallet!");
-        connectBtn.textContent = "Wallet Connected";
-        connectBtn.disabled = true;
-      } catch (error) {
-        console.error("Connection failed:", error);
-        alert("Failed to connect wallet. Please try again.");
+        await provider.enable();
+        alert("Connected: " + provider.accounts[0]);
+      } catch (err) {
+        console.error("WalletConnect connection failed", err);
+        alert("Wallet connection failed.");
       }
     });
   </script>
